@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eco-Chef: Your Food Waste-Fighting Assistant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Lexend', sans-serif;
+            background-color: #f0fdf4; /* Light Green */
+        }
+        .main-gradient {
+            background: linear-gradient(135deg, #2DD4BF 0%, #10B981 100%);
+        }
+        .nav-link {
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border-radius: 9999px; /* rounded-full */
+        }
+        .nav-link:not(.active):hover {
+            background-color: #e5e7eb; /* gray-200 */
+        }
+        .nav-link.active {
+            color: #ffffff; /* white */
+            background-color: #10B981; /* Teal-500 */
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .loader {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #10B981;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        .content-card {
+            background-color: #ffffff;
+            border-radius: 1.5rem; /* more rounded corners */
+            padding: 2rem;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05), 0 4px 6px -2px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+    </style>
+</head>
+<body class="text-gray-800 antialiased">
+
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        
+        <!-- Header Section -->
+        <header class="text-center mb-8">
+            <h1 class="text-5xl md:text-6xl font-bold main-gradient text-transparent bg-clip-text">Eco-Chef</h1>
+            <p class="text-lg text-gray-500 mt-2">Delicious meals from leftovers.</p>
+        </header>
+        
+        <!-- Navigation -->
+        <nav class="bg-white/70 backdrop-blur-lg sticky top-4 z-10 p-2 rounded-full shadow-md mb-10 max-w-md mx-auto">
+            <ul class="flex justify-center items-center gap-2">
+                <li><a class="nav-link active font-semibold py-2 px-4" data-page="recipe-finder">Recipe Finder</a></li>
+                <li><a class="nav-link font-semibold text-gray-700 py-2 px-4" data-page="mission">Our Mission</a></li>
+                <li><a class="nav-link font-semibold text-gray-700 py-2 px-4" data-page="about">About Us</a></li>
+            </ul>
+        </nav>
+
+        <!-- Page Content -->
+        <main id="page-content">
+
+            <!-- Recipe Finder Page -->
+            <section id="recipe-finder" class="page fade-in">
+                <!-- Input Section -->
+                <div class="content-card mb-8">
+                    <label for="ingredients" class="block text-xl font-semibold mb-2 text-gray-800">What's in your fridge?</label>
+                    <p class="text-base text-gray-500 mb-4">List your ingredients, separated by commas.</p>
+                    <textarea id="ingredients" rows="4" class="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-400 focus:border-teal-400 transition-shadow" placeholder="e.g., chicken breast, old carrots, half an onion, yogurt"></textarea>
+                    <button id="generate-btn" class="mt-4 w-full main-gradient text-white font-bold py-3 px-6 rounded-xl hover:opacity-90 focus:outline-none focus:ring-4 focus:ring-green-200 transition-all duration-300 transform hover:scale-[1.02]">
+                        Generate Recipe
+                    </button>
+                </div>
+
+                <!-- Loading Indicator -->
+                <div id="loader" class="hidden justify-center items-center my-8">
+                    <div class="loader"></div>
+                    <p class="ml-4 text-gray-600">Finding a delicious recipe for you...</p>
+                </div>
+                
+                <!-- Error Message Display -->
+                <div id="error-message" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl relative" role="alert">
+                    <strong class="font-bold">Oops!</strong>
+                    <span class="block sm:inline" id="error-text">Something went wrong. Please try again.</span>
+                </div>
+
+                <!-- Results Section -->
+                <div id="results" class="hidden space-y-8">
+                    <div id="recipe-card" class="content-card">
+                        <h2 id="recipe-title" class="text-3xl md:text-4xl font-bold text-gray-800 mb-4"></h2>
+                        <div class="space-y-4">
+                            <div>
+                                <h3 class="text-xl font-semibold mb-2 text-teal-600">Ingredients:</h3>
+                                <ul id="recipe-ingredients" class="list-disc list-inside text-gray-600 space-y-1"></ul>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-semibold mb-2 text-teal-600">Instructions:</h3>
+                                <ol id="recipe-instructions" class="list-decimal list-inside text-gray-600 space-y-2"></ol>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <div class="bg-emerald-100 p-6 rounded-2xl border border-emerald-200">
+                             <h3 class="text-xl font-semibold text-emerald-800 mb-2">Carbon Footprint Savings</h3>
+                             <p id="carbon-footprint" class="text-emerald-700"></p>
+                        </div>
+                        <div class="bg-sky-100 p-6 rounded-2xl border border-sky-200">
+                            <h3 class="text-xl font-semibold text-sky-800 mb-2">Sustainability Fun Fact</h3>
+                            <p id="fun-fact" class="text-sky-700"></p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Mission Page -->
+            <section id="mission" class="page hidden fade-in">
+                 <div class="content-card text-center">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-4">Our Mission</h2>
+                    <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+                        Globally, over one-third of all food produced goes to waste, creating a staggering
+                         environmental and economic impact. At Eco-Chef our mission is to fight this problem from the ground up—right in your kitchen. 
+                         By turning leftover or unused ingredients into creative easy-to-make recipes, we help you save money, reduce waste,
+                         and make the most of your produce. We believe that small, mindful choices can lead to massive collectiove change--building
+                         a healthier planet, one plate at a time. 
+                    </p>
+                 </div>
+            </section>
+
+            <!-- About Us Page -->
+            <section id="about" class="page hidden fade-in">
+                <div class="content-card text-center">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-4">About Us</h2>
+                    <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+                        Eco-Chef began as a late-night conversation between friends who shared two passions--good food and a better planet. 
+                        After too many wilted vegtables and forgotten leftovers, we realized how much perfectly good food ends up going to waste. 
+                        As developers, designers, and everyday cooks, we wanted to create something that could make sustainability simple, accessible, and even fun.
+                        Eco-Ched was born from that desire--to turn small kitchen moments into meaninful action.
+                    </p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // --- Page Navigation ---
+        const navLinks = document.querySelectorAll('.nav-link');
+        const pages = document.querySelectorAll('.page');
+
+        navLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                const pageId = link.getAttribute('data-page');
+
+                // Hide all pages
+                pages.forEach(page => page.classList.add('hidden'));
+                
+                // Show the selected page
+                const activePage = document.getElementById(pageId);
+                if (activePage) {
+                    activePage.classList.remove('hidden');
+                }
+
+                // Update active link style
+                navLinks.forEach(navLink => navLink.classList.remove('active'));
+                link.classList.add('active');
+            });
+        });
+
+        // --- Recipe Generation Logic ---
+        const generateBtn = document.getElementById('generate-btn');
+        const ingredientsInput = document.getElementById('ingredients');
+        const loader = document.getElementById('loader');
+        const resultsDiv = document.getElementById('results');
+        const errorMessageDiv = document.getElementById('error-message');
+        const errorText = document.getElementById('error-text');
+
+        const recipeTitle = document.getElementById('recipe-title');
+        const recipeIngredients = document.getElementById('recipe-ingredients');
+        const recipeInstructions = document.getElementById('recipe-instructions');
+        const carbonFootprint = document.getElementById('carbon-footprint');
+        const funFact = document.getElementById('fun-fact');
+
+        generateBtn.addEventListener('click', async () => {
+            const ingredients = ingredientsInput.value.trim();
+            if (!ingredients) {
+                showError("Please enter some ingredients.");
+                return;
+            }
+
+            resultsDiv.classList.add('hidden');
+            errorMessageDiv.classList.add('hidden');
+            loader.style.display = 'flex';
+            generateBtn.disabled = true;
+            generateBtn.textContent = 'Generating...';
+
+            const systemPrompt = `You are an expert chef and sustainability expert. Your goal is to help users reduce food waste.
+            Create a simple, delicious recipe using ONLY the ingredients provided by the user.
+            You can assume the user has basic pantry staples like salt, pepper, oil, and water.
+            Also, calculate a rough estimate of the carbon footprint saved in kilograms of CO2 equivalent by not wasting these items.
+            Finally, provide one interesting, fun sustainability fact about one of the provided ingredients.
+            
+            Your response MUST be a valid JSON object following this exact schema:
+            {
+              "recipeTitle": "string",
+              "ingredients": ["string", "..."],
+              "instructions": ["string", "..."],
+              "carbonFootprintKg": "number",
+              "sustainabilityFact": "string"
+            }`;
+            
+            const userPrompt = `Ingredients: ${ingredients}`;
+            // IMPORTANT: You need to replace "YOUR_API_KEY_HERE" with your actual Google AI API key.
+            const apiKey = "AIzaSyDZN_6tND6U_ImB6s9Vxdf7i6otZUj3TK8"; // <-- PASTE YOUR API KEY HERE
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+            const payload = {
+                contents: [{ parts: [{ text: userPrompt }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+                generationConfig: { responseMimeType: "application/json" }
+            };
+            
+            try {
+                const response = await fetchWithExponentialBackoff(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API error: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                const responseText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (!responseText) {
+                    throw new Error('Received an empty response from the model.');
+                }
+                
+                const data = JSON.parse(responseText);
+                displayResults(data);
+
+            } catch (error) {
+                console.error("Error fetching recipe:", error);
+                showError(error.message || "Failed to generate recipe. Please check your ingredients and try again.");
+            } finally {
+                loader.style.display = 'none';
+                generateBtn.disabled = false;
+                generateBtn.textContent = 'Generate Recipe';
+            }
+        });
+
+        function displayResults(data) {
+            recipeTitle.textContent = data.recipeTitle;
+            
+            recipeIngredients.innerHTML = '';
+            recipeInstructions.innerHTML = '';
+
+            data.ingredients.forEach(item => {
+                const li = document.createElement('li');
+                li.textContent = item;
+                recipeIngredients.appendChild(li);
+            });
+
+            data.instructions.forEach(item => {
+                const li = document.createElement('li');
+                li.textContent = item;
+                recipeInstructions.appendChild(li);
+            });
+
+            carbonFootprint.textContent = `By using these ingredients, you've saved an estimated ${data.carbonFootprintKg} kg of CO₂ equivalent!`;
+            funFact.textContent = data.sustainabilityFact;
+
+            resultsDiv.classList.remove('hidden');
+        }
+        
+        function showError(message) {
+            errorText.textContent = message;
+            errorMessageDiv.classList.remove('hidden');
+        }
+
+        async function fetchWithExponentialBackoff(url, options, retries = 3, delay = 1000) {
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(url, options);
+                    if (response.status !== 429) { 
+                        return response;
+                    }
+                } catch (error) {
+                    if (i === retries - 1) throw error;
+                }
+                await new Promise(resolve => setTimeout(resolve, delay * Math.pow(2, i)));
+            }
+        }
+    </script>
+</body>
+</html>
+
+
+
